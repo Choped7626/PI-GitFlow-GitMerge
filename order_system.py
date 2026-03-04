@@ -1,4 +1,5 @@
 from datetime import datetime
+import json
 
 
 class Order:
@@ -19,7 +20,7 @@ class Order:
 
     def summary(self):
         return {
-            "order_id": self.order_id,
+            "id": self.order_id,
             "customer": self.customer,
             "total": round(self.total_price(), 2),
             "discount": self.discount,
@@ -28,8 +29,9 @@ class Order:
 
 
 class OrderManager:
-    def __init__(self):
+    def __init__(self, storage_file="orders.json"):
         self.orders = {}
+        self.storage_file = storage_file
 
     def create_order(self, order_id, customer, items, discount=0):
         if order_id in self.orders:
@@ -37,6 +39,7 @@ class OrderManager:
 
         order = Order(order_id, customer, items, discount)
         self.orders[order_id] = order
+        self.save_to_disk()
         return order
 
     def get_order(self, order_id):
@@ -44,6 +47,11 @@ class OrderManager:
 
     def get_total_revenue(self):
         return sum(order.total_price() for order in self.orders.values())
+
+    def save_to_disk(self):
+        data = {oid: order.summary() for oid, order in self.orders.items()}
+        with open(self.storage_file, "w") as f:
+            json.dump(data, f, indent=2)
 
 
 if __name__ == "__main__":
